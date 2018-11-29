@@ -1,15 +1,16 @@
 import { Component } from "@angular/core";
-import { Message } from "./message.model";
 import { MessageService } from "./message.service";
+import { Message } from "./message.model";
+import { Observable } from "rxjs/Observable";
 
 @Component({
-  selector: "paMessages",
-  templateUrl: "message.component.html"
+    selector: "paMessages",
+    templateUrl: "message.component.html",
 })
 export class MessageComponent {
-  lastMessage: Message;
+    lastMessage: Message;
 
-  constructor(messageService: MessageService) {
-    messageService.registerMessageHandler(m => this.lastMessage = m);
-  }
+    constructor(messageService: MessageService) {
+        messageService.messages.subscribe(m => this.lastMessage = m);
+    }
 }

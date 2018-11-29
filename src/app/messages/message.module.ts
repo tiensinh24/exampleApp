@@ -4,9 +4,9 @@ import { MessageComponent } from "./message.component";
 import { MessageService } from "./message.service";
 
 @NgModule({
-  imports: [BrowserModule],
-  declarations: [MessageComponent],
-  exports: [MessageComponent],
-  providers: [MessageService]
+    imports: [BrowserModule],
+    declarations: [MessageComponent],
+    exports: [MessageComponent],
+    providers: [MessageService]
 })
 export class MessageModule { }
