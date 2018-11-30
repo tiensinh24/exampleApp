@@ -3,8 +3,9 @@ import { NgForm } from "@angular/forms";
 import { Product } from "../model/product.model";
 import { Model } from "../model/repository.model";
 import { MODES, SharedState, SHARED_STATE } from "./sharedState.model";
-import { Observable } from "rxjs";
-import { filter, map, distinctUntilChanged, skipWhile } from "rxjs/operators";
+import { Observable } from "rxjs/Observable";
+import { ActivatedRoute, Router } from "@angular/router";
+// import { filter, map, distinctUntilChanged, skipWhile } from "rxjs/operators";
 
 @Component({
     selector: "paForm",
@@ -14,20 +15,26 @@ import { filter, map, distinctUntilChanged, skipWhile } from "rxjs/operators";
 export class FormComponent {
     product: Product = new Product();
 
-    constructor(private model: Model,
-        @Inject(SHARED_STATE) private stateEvents: Observable<SharedState>) {
-            stateEvents
-            // .pipe(skipWhile(state => state.mode == MODES.EDIT))
-            // .pipe(distinctUntilChanged((firstState, secondState) =>
-            //     firstState.mode == secondState.mode
-            //         && firstState.id == secondState.id))
-            .subscribe(update => {
-                this.product = new Product();
-                if (update.id != undefined) {
-                    Object.assign(this.product, this.model.getProduct(update.id));
-                }
-                this.editing = update.mode == MODES.EDIT;
-            });
+    constructor(private model: Model, activeRoute: ActivatedRoute,
+      private router: Router) {
+
+      // this.editing = activeRoute.snapshot.url[1].path == "edit";
+      this.editing = activeRoute.snapshot.params["mode"] == "edit";
+      let id = activeRoute.snapshot.params["id"];
+      if (id != null) {
+        let name = activeRoute.snapshot.params["name"];
+        let category = activeRoute.snapshot.params["category"];
+        let price = activeRoute.snapshot.params["price"];
+
+        if (name != null && category != null && price != null) {
+          this.product.id = id;
+          this.product.name = name;
+          this.product.category = category;
+          this.product.price = Number.parseFloat(price);
+        } else {
+          Object.assign(this.product, model.getProduct(id) || new Product());
+        }
+      }
     }
 
     editing: boolean = false;
@@ -35,8 +42,7 @@ export class FormComponent {
     submitForm(form: NgForm) {
         if (form.valid) {
             this.model.saveProduct(this.product);
-            this.product = new Product();
-            form.reset();
+            this.router.navigateByUrl("/");
         }
     }
 
