@@ -1,51 +1,46 @@
-import { InjectionToken, Injectable, Inject } from "@angular/core";
+import { Injectable, Inject, InjectionToken } from "@angular/core";
 import { HttpClient, HttpHeaders } from "@angular/common/http";
+import { Observable, throwError } from "rxjs";
 import { Product } from "./product.model";
-import { Observable } from "rxjs/Observable";
 import { catchError, delay } from "rxjs/operators";
-import { throwError } from "rxjs";
 
 export const REST_URL = new InjectionToken("rest_url");
 
 @Injectable()
 export class RestDataSource {
+    constructor(private http: HttpClient,
+        @Inject(REST_URL) private url: string) { }
 
-  constructor(
-    private http: HttpClient,
-    @Inject(REST_URL) private url: string
-  ) { }
+    getData(): Observable<Product[]> {
+        return this.sendRequest<Product[]>("GET", this.url);
+    }
 
-  getData(): Observable<Product[]> {
-    // return this.http.get<Product[]>(this.url);
-    return this.sendRequest<Product[]>("GET", this.url);
-  }
+    saveProduct(product: Product): Observable<Product> {
+        return this.sendRequest<Product>("POST", this.url, product);
+    }
 
-  saveProduct(product: Product): Observable<Product> {
-    // return this.http.post<Product>(this.url, product);
-    return this.sendRequest<Product>("POST", this.url, product);
-  }
+    updateProduct(product: Product): Observable<Product> {
+        return this.sendRequest<Product>("PUT",
+            `${this.url}/${product.id}`, product);
+    }
 
-  updateProduct(product: Product): Observable<Product> {
-    // return this.http.put<Product>(`${this.url}/${product.id}`, product);
-    return this.sendRequest<Product>("PUT", `${this.url}/${product.id}`, product);
-  }
+    deleteProduct(id: number): Observable<Product> {
+        return this.sendRequest<Product>("DELETE", `${this.url}/${id}`);
+    }
 
-  deleteProduct(id: number): Observable<Product> {
-    // return this.http.delete<Product>(`${this.url}/${id}`);
-    return this.sendRequest<Product>("DELETE", `${this.url}/${id}`)
-  }
+    private sendRequest<T>(verb: string, url: string, body?: Product)
+        : Observable<T> {
 
-  private sendRequest<T>(verb: string, url: string, body?: Product): Observable<T> {
+        let myHeaders = new HttpHeaders();
+        myHeaders = myHeaders.set("Access-Key", "<secret>");
+        myHeaders = myHeaders.set("Application-Names", ["exampleApp", "proAngular"]);
 
-    let myHeaders = new HttpHeaders();
-    myHeaders = myHeaders.set("Access-Key", "<secret>")
-    myHeaders = myHeaders.set("Application-Name", ["exampleApp", "proAngular"]);
-
-    return this.http.request<T>(verb, url, {
-      body: body,
-      headers: myHeaders
-    }).pipe(delay(5000))
-    .pipe(catchError((error: Response) =>
-        throwError(`Network Error: ${error.statusText} (${error.status})`)));
-  }
+        return this.http.request<T>(verb, url, {
+            body: body,
+            headers: myHeaders
+        })
+        //.pipe(delay(5000))
+        .pipe(catchError((error: Response) => 
+            throwError(`Network Error: ${error.statusText} (${error.status})`)));
+    }
 }
